@@ -1,6 +1,16 @@
-# 🎺 Sistem Absensi Marching Band
+# 🎺 Sistem Absensi Simphony
 
-Aplikasi web absensi otomatis berbasis pengenalan wajah untuk anggota marching band. Seluruh proses deteksi dan pengenalan wajah berjalan di browser (client-side) menggunakan `@vladmandic/human` — tanpa API berbayar atau cloud.
+Aplikasi web absensi otomatis berbasis pengenalan wajah untuk anggota Simphony. Seluruh proses deteksi dan pengenalan wajah berjalan di browser (client-side) menggunakan `@vladmandic/human` — tanpa API berbayar atau cloud.
+
+---
+
+## 🚀 Fitur Utama
+
+- **Real-time Face Recognition**: Proses pengenalan wajah seketika menggunakan webcam/kamera HP.
+- **Anti-Cheat Kode Harian**: Anggota wajib memasukkan 5 digit kode harian yang hanya bisa didapatkan dari pelatih/admin di tempat, guna menghindari "absen dari rumah".
+- **Auto-Sync (No Refresh)**: Tampilan daftar absensi admin dan kamera scanner akan tersinkronisasi otomatis (*silent polling*) tanpa perlu me-reload halaman.
+- **Satu Wajah = Satu Akun**: Pencegahan pendaftaran ganda menggunakan Cosine Similarity.
+- **Dukungan HP Spesifikasi Rendah**: Algoritma AI sudah dibatasi beban FPS-nya agar mulus dijalankan di HP biasa tanpa overhead RAM berlebih.
 
 ---
 
@@ -48,24 +58,18 @@ Password : admin123
 
 ## 📱 Alur Penggunaan
 
+### Admin Dashboard (`/dashboard`)
+1. Buka `/login`, masuk dengan `admin` & `admin123`.
+2. Di pojok atas panel admin, Anda akan melihat **"Kode Hari Ini: XXXXX"**. Bagikan 5 digit kode ini ke anggota yang hadir.
+3. **Kelola Anggota** → Tambah anggota baru dengan capture 5 foto wajah interaktif (kamera otomatis membaca berbagai posisi wajah).
+4. **Data Absensi** → Tabel rekap kehadiran akan *auto-refresh* setiap kali ada data baru.
+
 ### Absensi (Halaman Utama `/`)
 1. Buka `http://localhost:3000`
-2. Klik tombol **"Mulai Absen"**
-3. Izinkan akses kamera
-4. Arahkan wajah ke kamera
-5. Sistem akan otomatis mendeteksi dan mencocokkan wajah
-6. Notifikasi muncul jika wajah dikenali
-
-### Admin Dashboard (`/dashboard`)
-1. Klik **"Login Admin"** di navbar atau buka `/login`
-2. Masuk dengan username `admin` dan password `admin123`
-3. **Kelola Anggota** → Tambah anggota baru dengan capture 5 foto wajah interaktif yang memberi instruksi bertahap:
-   - *Sample 1: Tatap Lurus ke Depan*
-   - *Sample 2: Tersenyum Natural*
-   - *Sample 3: Menoleh Sedikit ke Kiri (~15°)*
-   - *Sample 4: Menoleh Sedikit ke Kanan (~15°)*
-   - *Sample 5: Sedikit Menunduk / Angkat Dagu*
-4. **Data Absensi** → Lihat rekap kehadiran lengkap beserta tanggal dan **Jam tepat saat scan (WIB)** serta fitur filter fleksibel
+2. Masukkan **Kode Absen Harian (5 digit)** yang didapatkan dari Admin.
+3. Klik tombol **"Mulai Absen"** (kamera akan menyala jika kode disubmit).
+4. Arahkan wajah ke kamera. Wajah akan dikalkulasi dalam 3 frame cepat.
+5. Notifikasi muncul jika wajah dikenali dan kamera otomatis berhenti (maksimal 1 absen per orang per hari).
 
 ---
 
@@ -87,7 +91,7 @@ Password : admin123
 
 ```
 app/
-├── page.tsx              # Halaman absen utama
+├── page.tsx              # Halaman absen utama (Scanner)
 ├── login/                # Halaman login admin
 └── dashboard/
     ├── anggota/          # Kelola anggota
@@ -102,6 +106,7 @@ components/
 lib/
 ├── prisma.ts             # Prisma client singleton
 ├── auth.ts               # Session cookie utilities
+├── daily-code.ts         # Generator kode absen harian
 └── face-matcher.ts       # Cosine similarity matching
 
 public/models/            # Model AI (blazeface + faceres)
@@ -115,30 +120,26 @@ prisma/
 
 ## ⚙️ Konfigurasi & Optimasi Performa
 
-### 🛡️ Pencegahan Duplikasi Wajah (1 Wajah = 1 Akun)
-Sistem memiliki pengamanan ganda (*frontend & backend API*) menggunakan *Cosine Similarity*. Saat admin mendaftarkan atau mengedit sampel wajah anggota, sistem mengecek terhadap **seluruh embedding wajah eksisting di database**. Jika terdeteksi kemiripan (`≥ 0.60`) dengan anggota lain yang sudah ada, sistem menolak penyimpanan dan memunculkan peringatan merah di UI.
-
 ### ⚡ Optimasi untuk Device Berspesifikasi Rendah (Low-End Devices)
-Sistem telah dioptimalkan agar ringan dijalankan pada laptop/PC atau smartphone spesifikasi terbatas:
-- **Throttle Detection FPS (`FaceDetector.tsx`)**: Pemrosesan *frame inference AI* dibatasi maksimal **10 FPS** (~100ms interval) sehingga beban GPU & RAM turun drastis hingga 80% tanpa mengorbankan kehalusan video (30/60 fps).
-- **Single-Face Focus (`maxDetected: 1`)**: Pemindaian difokuskan hanya pada 1 wajah utama di depan kamera untuk mempercepat kalkulasi tensor WebGL.
-- **Camera Frame Rate & Resolution Constraints**: Kamera meminta batas optimal `480x480` dengan frame rate hemat (`24-30 fps`).
+Sistem telah dioptimalkan agar ringan dijalankan pada smartphone spesifikasi terbatas:
+- **Throttle Detection FPS**: Pemrosesan *frame inference AI* dibatasi maksimal **10 FPS** (~100ms interval) sehingga beban GPU turun drastis.
+- **Fast Match Stability**: Kami menurunkan syarat frame stabil ke **3 Frame** (dari sebelumnya 8) agar proses absen terasa instan namun tetap akurat.
 
 ### Face Recognition Threshold
 Edit di `components/FaceDetector.tsx` & `lib/face-matcher.ts`:
 ```typescript
-const SIMILARITY_THRESHOLD = 0.60; // Naikkan untuk lebih ketat, turunkan untuk lebih longgar
+const SIMILARITY_THRESHOLD = 0.60; // Naikkan untuk lebih ketat
 ```
 
 ### Cooldown Antar Absen
 Di `app/page.tsx`:
 ```typescript
-cooldownMs={7000} // 7 detik cooldown per orang
+cooldownMs={7000} // 7 detik cooldown per orang jika absen berkelanjutan
 ```
 
 ### Stabilitas Deteksi
 ```typescript
-const STABILITY_FRAMES = 8; // Frame stabil sebelum matching
+const STABILITY_FRAMES = 3; // Frame stabil sebelum matching (Sangat cepat)
 ```
 
 ---
@@ -152,12 +153,3 @@ npm run db:push      # Push schema ke database
 npm run db:seed      # Seed admin default
 npm run setup        # Setup lengkap (db + seed + models)
 ```
-
----
-
-## 🤖 Model AI yang Digunakan
-
-- **blazeface** (~600KB) — Face detector
-- **faceres** (~7MB) — Face recognition (128-dim embedding)
-
-Model diload dari `public/models/` yang sudah disalin saat `npm run setup`.
