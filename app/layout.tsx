@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Absensi Marching Band',
-  description: 'Sistem absensi otomatis berbasis pengenalan wajah untuk anggota marching band',
-  keywords: ['absensi', 'marching band', 'face recognition', 'kehadiran'],
+  title: 'Absensi Simphony',
+  description: 'Sistem absensi otomatis berbasis pengenalan wajah untuk anggota simphony',
+  keywords: ['absensi', 'simphony', 'face recognition', 'kehadiran'],
 };
 
 export default function RootLayout({

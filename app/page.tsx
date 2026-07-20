@@ -49,6 +49,11 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchDatabase();
+    // Auto-refresh data tanpa reload (polling 5 detik)
+    const timer = setInterval(() => {
+      fetchDatabase();
+    }, 5000);
+    return () => clearInterval(timer);
   }, [fetchDatabase]);
 
   // Start camera
@@ -120,8 +125,10 @@ export default function HomePage() {
 
         if (data.alreadyRecorded) {
           addToast(`ℹ️ Halo ${anggota.nama}, Anda sudah absen hari ini!`, 'info', 6000);
+          stopCamera();
         } else if (res.ok && data.success) {
           addToast(`✅ Halo ${anggota.nama}! Absen berhasil dicatat ✓`, 'success', 6000);
+          stopCamera();
         } else {
           addToast(`❌ Gagal mencatat absensi untuk ${anggota.nama}: ${data.error || 'Error'}`, 'error', 5000);
         }
@@ -129,7 +136,7 @@ export default function HomePage() {
         addToast(`Halo, ${anggota.nama}! (Gagal terhubung ke server)`, 'warning', 5000);
       }
     },
-    [addToast]
+    [addToast, stopCamera]
   );
 
   // Handle no match

@@ -46,8 +46,8 @@ export default function AbsensiPage() {
     fetch('/api/anggota').then((r) => r.json()).then(setAnggotaList).catch(() => {});
   }, []);
 
-  const fetchAbsensi = useCallback(async () => {
-    setLoading(true);
+  const fetchAbsensi = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const params = new URLSearchParams();
       if (filterAnggota) params.set('anggotaId', filterAnggota);
@@ -65,12 +65,17 @@ export default function AbsensiPage() {
       const res = await fetch(`/api/absensi?${params}`);
       if (res.ok) setAbsensi(await res.json());
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [tabMode, filterAnggota, filterTanggal, filterBulan, filterTahun]);
 
   useEffect(() => {
     fetchAbsensi();
+    // Auto-refresh data tanpa reload (polling 5 detik) untuk dashboard
+    const timer = setInterval(() => {
+      fetchAbsensi(true);
+    }, 5000);
+    return () => clearInterval(timer);
   }, [fetchAbsensi]);
 
   // Statistik Cepat (berdasarkan data yang dimuat saat ini)

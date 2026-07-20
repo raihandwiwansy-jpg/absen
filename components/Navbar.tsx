@@ -47,7 +47,7 @@ export default function Navbar() {
               letterSpacing: '0.05em',
             }}
           >
-            Marching Band
+            Simphony
           </span>
         </div>
       </Link>

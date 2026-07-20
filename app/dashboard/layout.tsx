@@ -104,7 +104,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             🎺
           </div>
           <div>
-            <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f5f5' }}>Marching Band</div>
+            <div style={{ fontSize: '14px', fontWeight: 700, color: '#f5f5f5' }}>Simphony</div>
             <div style={{ fontSize: '11px', color: '#888888', marginTop: '2px' }}>Admin Panel</div>
           </div>
         </div>

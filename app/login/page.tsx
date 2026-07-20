@@ -99,8 +99,8 @@ export default function LoginPage() {
           >
             Admin Login
           </h1>
-          <p style={{ fontSize: '13px', color: '#888888' }}>
-            Masuk ke panel admin Marching Band
+          <p style={{ fontSize: '14px', color: '#888888', marginBottom: '24px' }}>
+            Masuk ke panel admin Simphony
           </p>
         </div>
 

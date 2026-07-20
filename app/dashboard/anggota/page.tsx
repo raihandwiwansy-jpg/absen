@@ -21,18 +21,23 @@ export default function AnggotaPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [search, setSearch] = useState('');
 
-  const fetchAnggota = useCallback(async () => {
-    setLoading(true);
+  const fetchAnggota = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const res = await fetch('/api/anggota');
       if (res.ok) setAnggota(await res.json());
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchAnggota();
+    // Auto-refresh data tanpa reload (polling 5 detik)
+    const timer = setInterval(() => {
+      fetchAnggota(true);
+    }, 5000);
+    return () => clearInterval(timer);
   }, [fetchAnggota]);
 
   const handleDelete = async (id: number, nama: string) => {

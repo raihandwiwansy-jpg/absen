@@ -33,7 +33,7 @@ interface FaceDetectorProps {
 }
 
 // Minimum frames wajah harus stabil sebelum matching dijalankan
-const STABILITY_FRAMES = 8;
+const STABILITY_FRAMES = 3;
 // Threshold similarity
 const SIMILARITY_THRESHOLD = 0.60;
 
