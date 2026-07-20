@@ -23,20 +23,20 @@ export async function GET(request: NextRequest) {
     }
 
     if (tanggal) {
-      const start = new Date(tanggal);
-      const end = new Date(tanggal);
-      end.setDate(end.getDate() + 1);
+      const [y, m, d] = tanggal.split('-').map(Number);
+      const start = new Date(Date.UTC(y, m - 1, d, -7, 0, 0));
+      const end = new Date(Date.UTC(y, m - 1, d + 1, -7, 0, 0));
       where.tanggal = { gte: start, lt: end };
     } else if (bulan && tahun) {
       const monthInt = parseInt(bulan);
       const yearInt = parseInt(tahun);
-      const start = new Date(yearInt, monthInt - 1, 1);
-      const end = new Date(yearInt, monthInt, 1);
+      const start = new Date(Date.UTC(yearInt, monthInt - 1, 1, -7, 0, 0));
+      const end = new Date(Date.UTC(yearInt, monthInt, 1, -7, 0, 0));
       where.tanggal = { gte: start, lt: end };
     } else if (tahun) {
       const yearInt = parseInt(tahun);
-      const start = new Date(yearInt, 0, 1);
-      const end = new Date(yearInt + 1, 0, 1);
+      const start = new Date(Date.UTC(yearInt, 0, 1, -7, 0, 0));
+      const end = new Date(Date.UTC(yearInt + 1, 0, 1, -7, 0, 0));
       where.tanggal = { gte: start, lt: end };
     }
 
@@ -83,9 +83,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Cek sudah absen hari ini
-    const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Jakarta',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+    });
+    const dateStr = formatter.format(now); // e.g. "7/21/2026"
+    const [m, d, y] = dateStr.split('/').map(Number);
+    
+    // 00:00 WIB = 17:00 UTC previous day
+    const startOfDay = new Date(Date.UTC(y, m - 1, d, -7, 0, 0));
+    const endOfDay = new Date(Date.UTC(y, m - 1, d + 1, -7, 0, 0));
 
     const existingAbsensi = await prisma.absensi.findFirst({
       where: {

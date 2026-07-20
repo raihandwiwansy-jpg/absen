@@ -4,11 +4,16 @@ export function getDailyCode(): string {
   const secret = process.env.SESSION_SECRET || 'marching-band-secret';
   const now = new Date();
   
-  // Tanggal format: YYYY-MM-DD
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const dateStr = `${year}-${month}-${day}`;
+  // Ambil tanggal dalam zona waktu WIB (Asia/Jakarta)
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  // output format: MM/DD/YYYY
+  const dateParts = formatter.format(now).split('/');
+  const dateStr = `${dateParts[2]}-${dateParts[0]}-${dateParts[1]}`;
   
   // Buat hash dari tanggal dan secret
   let hash = 0;
