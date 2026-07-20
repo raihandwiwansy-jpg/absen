@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Anggota {
+  id               Int        @id @default(autoincrement())
+  nama             String
+  embeddings       String     // JSON string: number[][]  (array of descriptors)
+  thumbnailBase64  String?    // base64 image string for display
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  absensi          Absensi[]
+}
+
+model Absensi {
+  id         Int      @id @default(autoincrement())
+  anggotaId  Int
+  tanggal    DateTime
+  createdAt  DateTime @default(now())
+  anggota    Anggota  @relation(fields: [anggotaId], references: [id], onDelete: Cascade)
+}
