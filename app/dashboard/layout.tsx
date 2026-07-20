@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const navItems = [
   {
@@ -34,6 +34,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dailyCode, setDailyCode] = useState('-');
+
+  useEffect(() => {
+    fetch('/api/daily-code')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.code) setDailyCode(data.code);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -176,31 +186,42 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             position: 'sticky',
             top: 0,
             zIndex: 30,
+            justifyContent: 'space-between',
           }}
         >
-          {/* Hamburger (Mobile Only) */}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="mobile-only"
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#D4AF37',
-              cursor: 'pointer',
-              padding: '4px',
-              display: 'flex',
-            }}
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="3" y1="6" x2="21" y2="6"/>
-              <line x1="3" y1="12" x2="21" y2="12"/>
-              <line x1="3" y1="18" x2="21" y2="18"/>
-            </svg>
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {/* Hamburger (Mobile Only) */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="mobile-only"
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#D4AF37',
+                cursor: 'pointer',
+                padding: '4px',
+                display: 'flex',
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            </button>
 
-          <span style={{ fontSize: '15px', fontWeight: 600, color: '#D4AF37' }}>
-            {navItems.find((n) => pathname.startsWith(n.href))?.label ?? 'Dashboard'}
-          </span>
+            <span style={{ fontSize: '15px', fontWeight: 600, color: '#D4AF37' }}>
+              {navItems.find((n) => pathname.startsWith(n.href))?.label ?? 'Dashboard'}
+            </span>
+          </div>
+
+          {/* Daily Code Display */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '12px', color: '#888888', display: 'none' }} className="desktop-only-inline">Kode Hari Ini:</span>
+            <div style={{ background: 'rgba(212,175,55,0.15)', color: '#D4AF37', border: '1px solid rgba(212,175,55,0.4)', padding: '6px 12px', borderRadius: '8px', fontWeight: 700, letterSpacing: '0.15em', fontSize: '14px', fontFamily: 'monospace' }}>
+              {dailyCode}
+            </div>
+          </div>
         </header>
 
         {/* Page content */}

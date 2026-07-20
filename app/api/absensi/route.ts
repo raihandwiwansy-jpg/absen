@@ -59,10 +59,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { anggotaId } = body;
+    const { anggotaId, kodeHarian } = body;
 
     if (!anggotaId) {
       return NextResponse.json({ error: 'anggotaId wajib diisi' }, { status: 400 });
+    }
+
+    const { getDailyCode } = await import('@/lib/daily-code');
+    const validCode = getDailyCode();
+
+    if (kodeHarian !== validCode) {
+      return NextResponse.json({ error: 'Kode absen tidak valid atau sudah kadaluarsa.' }, { status: 403 });
     }
 
     // Cek anggota ada

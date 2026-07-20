@@ -17,6 +17,7 @@ export default function HomePage() {
   const streamRef = useRef<MediaStream | null>(null);
 
   const [pageState, setPageState] = useState<PageState>('idle');
+  const [kodeHarian, setKodeHarian] = useState('');
   const [detectorStatus, setDetectorStatus] = useState<string>('');
   const [faceBbox, setFaceBbox] = useState<[number, number, number, number] | null>(null);
   const [faceDetected, setFaceDetected] = useState(false);
@@ -119,7 +120,7 @@ export default function HomePage() {
         const res = await fetch('/api/absensi', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ anggotaId: anggota.id }),
+          body: JSON.stringify({ anggotaId: anggota.id, kodeHarian }),
         });
         const data = await res.json();
 
@@ -136,7 +137,7 @@ export default function HomePage() {
         addToast(`Halo, ${anggota.nama}! (Gagal terhubung ke server)`, 'warning', 5000);
       }
     },
-    [addToast, stopCamera]
+    [addToast, stopCamera, kodeHarian]
   );
 
   // Handle no match
@@ -281,31 +282,50 @@ export default function HomePage() {
               
               {/* === IDLE: big start button === */}
               {pageState === 'idle' && (
-                <button
-                  id="btn-mulai-absen"
-                  onClick={startCamera}
-                  className="btn-gold animate-gold-pulse animate-fade-in-up"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '12px',
-                    padding: '16px 36px',
-                    fontSize: '18px',
-                    fontWeight: 700,
-                    borderRadius: '16px',
-                    letterSpacing: '0.02em',
-                    fontFamily: 'Poppins, sans-serif',
-                    width: '100%',
-                    maxWidth: '320px',
-                  }}
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                    <circle cx="12" cy="13" r="4"/>
-                  </svg>
-                  Mulai Absen
-                </button>
+                <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '16px' }} className="animate-fade-in-up">
+                  <div style={{ textAlign: 'center' }}>
+                    <p style={{ fontSize: '13px', color: '#888', marginBottom: '8px' }}>Masukkan 5 digit kode absen dari admin:</p>
+                    <input
+                      type="text"
+                      placeholder="XXXXX"
+                      value={kodeHarian}
+                      onChange={(e) => setKodeHarian(e.target.value.toUpperCase())}
+                      className="input-dark"
+                      style={{ textAlign: 'center', fontSize: '20px', letterSpacing: '0.2em', fontWeight: 700, padding: '12px', borderRadius: '12px' }}
+                      maxLength={5}
+                    />
+                  </div>
+                  <button
+                    id="btn-mulai-absen"
+                    onClick={() => {
+                      if (!kodeHarian || kodeHarian.length !== 5) {
+                        addToast('Masukkan 5 digit kode absen terlebih dahulu', 'warning', 3000);
+                        return;
+                      }
+                      startCamera();
+                    }}
+                    className="btn-gold animate-gold-pulse"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '12px',
+                      padding: '16px 36px',
+                      fontSize: '18px',
+                      fontWeight: 700,
+                      borderRadius: '16px',
+                      letterSpacing: '0.02em',
+                      fontFamily: 'Poppins, sans-serif',
+                      width: '100%',
+                    }}
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                      <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                    Mulai Absen
+                  </button>
+                </div>
               )}
 
               {/* === REQUESTING: loading indicator === */}
