@@ -33,7 +33,7 @@ interface FaceDetectorProps {
 }
 
 // Minimum frames wajah harus stabil sebelum matching dijalankan
-const STABILITY_FRAMES = 3;
+const STABILITY_FRAMES = 2;
 // Threshold similarity
 const SIMILARITY_THRESHOLD = 0.60;
 
@@ -127,8 +127,8 @@ export default function FaceDetector({
     }
 
     const now = performance.now();
-    // Throttle maksimal 10 FPS (~100ms interval) agar sangat ringan di CPU & GPU spesifikasi rendah
-    if (now - lastDetectTimeRef.current < 100) {
+    // Throttle maksimal 15 FPS (~66ms interval) untuk keseimbangan performa & kecepatan baca
+    if (now - lastDetectTimeRef.current < 66) {
       animFrameRef.current = requestAnimationFrame(detectLoop);
       return;
     }

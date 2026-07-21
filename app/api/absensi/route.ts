@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSessionAdmin } from '@/lib/auth';
+import { getDailyCode } from '@/lib/daily-code';
 
 // GET /api/absensi - list absensi dengan filter opsional
 export async function GET(request: NextRequest) {
@@ -65,7 +66,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'anggotaId wajib diisi' }, { status: 400 });
     }
 
-    const { getDailyCode } = await import('@/lib/daily-code');
     const validCode = getDailyCode();
 
     if (kodeHarian !== validCode) {
