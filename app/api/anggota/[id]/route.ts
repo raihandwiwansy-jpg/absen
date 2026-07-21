@@ -22,7 +22,7 @@ export async function PUT(
       return NextResponse.json({ error: 'ID tidak valid' }, { status: 400 });
     }
 
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const { nama, embeddings, thumbnailBase64 } = body;
 
     // CEK DUPLIKASI JIKA ADA UPDATE EMBEDDINGS

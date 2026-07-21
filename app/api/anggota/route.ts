@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const { nama, embeddings, thumbnailBase64 } = body;
 
     if (!nama || !embeddings || !Array.isArray(embeddings)) {

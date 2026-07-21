@@ -5,7 +5,7 @@ import { createSessionToken, SESSION_COOKIE_NAME } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const { username, password } = body;
 
     if (!username || !password) {

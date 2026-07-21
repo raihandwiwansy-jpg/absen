@@ -10,12 +10,23 @@ function createPrismaClient() {
   // /tmp adalah satu-satunya direktori yang writable di Vercel Serverless Functions.
   if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NODE_ENV === 'production') {
     const tmpDbPath = path.join('/tmp', 'dev.db');
-    if (!fs.existsSync(tmpDbPath)) {
+    
+    // Cek apakah /tmp/dev.db belum ada atau ukurannya 0 byte
+    if (!fs.existsSync(tmpDbPath) || fs.statSync(tmpDbPath).size === 0) {
       try {
-        if (fs.existsSync(dbFilePath)) {
-          fs.copyFileSync(dbFilePath, tmpDbPath);
+        const possibleSources = [
+          path.join(process.cwd(), 'prisma', 'dev.db'),
+          path.resolve(__dirname, '../prisma/dev.db'),
+          path.resolve(__dirname, '../../prisma/dev.db'),
+        ];
+        
+        const sourcePath = possibleSources.find((p) => fs.existsSync(p) && fs.statSync(p).size > 0);
+        
+        if (sourcePath) {
+          fs.copyFileSync(sourcePath, tmpDbPath);
         } else {
-          fs.writeFileSync(tmpDbPath, '');
+          console.error('Sumber dev.db tidak ditemukan di:', possibleSources);
+          if (!fs.existsSync(tmpDbPath)) fs.writeFileSync(tmpDbPath, '');
         }
       } catch (err) {
         console.error('Gagal menyalin dev.db ke /tmp:', err);

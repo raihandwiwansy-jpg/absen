@@ -17,11 +17,21 @@ export async function GET() {
       orderBy: { nama: 'asc' },
     });
 
-    const result = anggota.map((a) => ({
-      id: a.id,
-      nama: a.nama,
-      embeddings: JSON.parse(a.embeddings) as number[][],
-    }));
+    const result = [];
+    for (const a of anggota) {
+      try {
+        const parsed = typeof a.embeddings === 'string' ? JSON.parse(a.embeddings) : a.embeddings;
+        if (Array.isArray(parsed)) {
+          result.push({
+            id: a.id,
+            nama: a.nama,
+            embeddings: parsed as number[][],
+          });
+        }
+      } catch {
+        // Abaikan anggota ini jika JSON embeddings rusak agar tidak melempar error 500
+      }
+    }
 
     return NextResponse.json(result, {
       headers: {

@@ -68,11 +68,16 @@ export async function GET(request: NextRequest) {
 // POST /api/absensi - catat kehadiran (dari halaman absen publik)
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const { anggotaId, kodeHarian } = body;
 
     if (!anggotaId) {
       return NextResponse.json({ error: 'anggotaId wajib diisi' }, { status: 400 });
+    }
+
+    const idNum = typeof anggotaId === 'number' ? anggotaId : parseInt(anggotaId);
+    if (isNaN(idNum) || idNum <= 0) {
+      return NextResponse.json({ error: 'ID anggota tidak valid' }, { status: 400 });
     }
 
     const validCode = getDailyCode();
@@ -83,7 +88,7 @@ export async function POST(request: NextRequest) {
 
     // Cek anggota ada
     const anggota = await prisma.anggota.findUnique({
-      where: { id: parseInt(anggotaId) },
+      where: { id: idNum },
       select: { id: true, nama: true },
     });
 
@@ -96,7 +101,7 @@ export async function POST(request: NextRequest) {
 
     const existingAbsensi = await prisma.absensi.findFirst({
       where: {
-        anggotaId: parseInt(anggotaId),
+        anggotaId: idNum,
         tanggal: { gte: startOfDay, lt: endOfDay },
       },
     });
@@ -111,7 +116,7 @@ export async function POST(request: NextRequest) {
     }
 
     const absensi = await prisma.absensi.create({
-      data: { anggotaId: parseInt(anggotaId), tanggal: new Date() },
+      data: { anggotaId: idNum, tanggal: new Date() },
       include: { anggota: { select: { id: true, nama: true } } },
     });
 
