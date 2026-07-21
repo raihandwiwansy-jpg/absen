@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { getSessionAdmin } from '@/lib/auth';
 import { cosineSimilarity, SIMILARITY_THRESHOLD } from '@/lib/face-matcher';
 
+export const dynamic = 'force-dynamic';
+
 // PUT /api/anggota/[id] - update nama atau embedding anggota
 export async function PUT(
   request: NextRequest,
@@ -63,7 +65,11 @@ export async function PUT(
       select: { id: true, nama: true, thumbnailBase64: true, updatedAt: true },
     });
 
-    return NextResponse.json(updated);
+    return NextResponse.json(updated, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      },
+    });
   } catch (error) {
     console.error('[PUT /api/anggota/[id]]', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -87,9 +93,15 @@ export async function DELETE(
       return NextResponse.json({ error: 'ID tidak valid' }, { status: 400 });
     }
 
+    // Hapus data absensi terkait terlebih dahulu agar pasti bersih (mencegah error FK SQLite)
+    await prisma.absensi.deleteMany({ where: { anggotaId } });
     await prisma.anggota.delete({ where: { id: anggotaId } });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      },
+    });
   } catch (error) {
     console.error('[DELETE /api/anggota/[id]]', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

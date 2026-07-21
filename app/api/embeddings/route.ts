@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET /api/embeddings - return all face descriptors for client-side matching
 // Publik karena hanya berisi data numerik (bukan foto/PII sensitif)
 export async function GET() {
@@ -22,8 +25,7 @@ export async function GET() {
 
     return NextResponse.json(result, {
       headers: {
-        // Cache untuk 30 detik (embeddings tidak berubah sering)
-        'Cache-Control': 'public, max-age=30, stale-while-revalidate=60',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
       },
     });
   } catch (error) {

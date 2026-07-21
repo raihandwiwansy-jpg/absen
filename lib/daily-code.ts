@@ -1,19 +1,15 @@
 import crypto from 'crypto';
+import { getJakartaDateParts } from './date-utils';
 
 export function getDailyCode(): string {
   const secret = process.env.SESSION_SECRET || 'marching-band-secret';
   const now = new Date();
   
   // Ambil tanggal dalam zona waktu WIB (Asia/Jakarta)
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Jakarta',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  // output format: MM/DD/YYYY
-  const dateParts = formatter.format(now).split('/');
-  const dateStr = `${dateParts[2]}-${dateParts[0]}-${dateParts[1]}`;
+  const { year, month, day } = getJakartaDateParts(now);
+  const monthStr = String(month).padStart(2, '0');
+  const dayStr = String(day).padStart(2, '0');
+  const dateStr = `${year}-${monthStr}-${dayStr}`;
   
   // Buat hash dari tanggal dan secret
   let hash = 0;

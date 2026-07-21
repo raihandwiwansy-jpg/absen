@@ -36,7 +36,7 @@ export default function HomePage() {
   // Fetch face database
   const fetchDatabase = useCallback(async () => {
     try {
-      const res = await fetch('/api/embeddings');
+      const res = await fetch('/api/embeddings', { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
       if (res.ok) {
         const data = await res.json();
         setDatabase(data);

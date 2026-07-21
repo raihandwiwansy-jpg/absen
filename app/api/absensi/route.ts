@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSessionAdmin } from '@/lib/auth';
 import { getDailyCode } from '@/lib/daily-code';
+import { getJakartaDayBounds, getTodayJakartaBounds } from '@/lib/date-utils';
+
+export const dynamic = 'force-dynamic';
 
 // GET /api/absensi - list absensi dengan filter opsional
 export async function GET(request: NextRequest) {
@@ -20,25 +23,31 @@ export async function GET(request: NextRequest) {
     const where: Record<string, unknown> = {};
 
     if (anggotaId) {
-      where.anggotaId = parseInt(anggotaId);
+      const idNum = parseInt(anggotaId);
+      if (!isNaN(idNum)) where.anggotaId = idNum;
     }
 
     if (tanggal) {
       const [y, m, d] = tanggal.split('-').map(Number);
-      const start = new Date(Date.UTC(y, m - 1, d, -7, 0, 0));
-      const end = new Date(Date.UTC(y, m - 1, d + 1, -7, 0, 0));
-      where.tanggal = { gte: start, lt: end };
+      if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+        const { start, end } = getJakartaDayBounds(y, m, d);
+        where.tanggal = { gte: start, lt: end };
+      }
     } else if (bulan && tahun) {
       const monthInt = parseInt(bulan);
       const yearInt = parseInt(tahun);
-      const start = new Date(Date.UTC(yearInt, monthInt - 1, 1, -7, 0, 0));
-      const end = new Date(Date.UTC(yearInt, monthInt, 1, -7, 0, 0));
-      where.tanggal = { gte: start, lt: end };
+      if (!isNaN(monthInt) && !isNaN(yearInt)) {
+        const start = new Date(Date.UTC(yearInt, monthInt - 1, 1, -7, 0, 0));
+        const end = new Date(Date.UTC(yearInt, monthInt, 1, -7, 0, 0));
+        where.tanggal = { gte: start, lt: end };
+      }
     } else if (tahun) {
       const yearInt = parseInt(tahun);
-      const start = new Date(Date.UTC(yearInt, 0, 1, -7, 0, 0));
-      const end = new Date(Date.UTC(yearInt + 1, 0, 1, -7, 0, 0));
-      where.tanggal = { gte: start, lt: end };
+      if (!isNaN(yearInt)) {
+        const start = new Date(Date.UTC(yearInt, 0, 1, -7, 0, 0));
+        const end = new Date(Date.UTC(yearInt + 1, 0, 1, -7, 0, 0));
+        where.tanggal = { gte: start, lt: end };
+      }
     }
 
     const absensi = await prisma.absensi.findMany({
@@ -74,7 +83,7 @@ export async function POST(request: NextRequest) {
 
     // Cek anggota ada
     const anggota = await prisma.anggota.findUnique({
-      where: { id: anggotaId },
+      where: { id: parseInt(anggotaId) },
       select: { id: true, nama: true },
     });
 
@@ -83,23 +92,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Cek sudah absen hari ini
-    const now = new Date();
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Asia/Jakarta',
-      year: 'numeric',
-      month: 'numeric',
-      day: 'numeric',
-    });
-    const dateStr = formatter.format(now); // e.g. "7/21/2026"
-    const [m, d, y] = dateStr.split('/').map(Number);
-    
-    // 00:00 WIB = 17:00 UTC previous day
-    const startOfDay = new Date(Date.UTC(y, m - 1, d, -7, 0, 0));
-    const endOfDay = new Date(Date.UTC(y, m - 1, d + 1, -7, 0, 0));
+    const { start: startOfDay, end: endOfDay } = getTodayJakartaBounds();
 
     const existingAbsensi = await prisma.absensi.findFirst({
       where: {
-        anggotaId,
+        anggotaId: parseInt(anggotaId),
         tanggal: { gte: startOfDay, lt: endOfDay },
       },
     });
@@ -114,7 +111,7 @@ export async function POST(request: NextRequest) {
     }
 
     const absensi = await prisma.absensi.create({
-      data: { anggotaId, tanggal: new Date() },
+      data: { anggotaId: parseInt(anggotaId), tanggal: new Date() },
       include: { anggota: { select: { id: true, nama: true } } },
     });
 

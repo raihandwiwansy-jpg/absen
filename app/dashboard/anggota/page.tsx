@@ -24,7 +24,7 @@ export default function AnggotaPage() {
   const fetchAnggota = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const res = await fetch('/api/anggota');
+      const res = await fetch('/api/anggota', { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
       if (res.ok) setAnggota(await res.json());
     } finally {
       if (!silent) setLoading(false);
@@ -44,10 +44,16 @@ export default function AnggotaPage() {
     if (!confirm(`Hapus anggota "${nama}"? Semua data absensinya juga akan dihapus.`)) return;
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/anggota/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/anggota/${id}`, { method: 'DELETE', cache: 'no-store' });
       if (res.ok) {
         setAnggota((prev) => prev.filter((a) => a.id !== id));
+        fetchAnggota(true);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || `Gagal menghapus anggota "${nama}".`);
       }
+    } catch {
+      alert(`Terjadi kesalahan jaringan saat menghapus "${nama}".`);
     } finally {
       setDeletingId(null);
     }

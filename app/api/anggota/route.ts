@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { getSessionAdmin } from '@/lib/auth';
 import { cosineSimilarity, SIMILARITY_THRESHOLD } from '@/lib/face-matcher';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/anggota - ambil semua anggota (tanpa embedding untuk efisiensi)
 export async function GET() {
   try {
@@ -17,7 +19,11 @@ export async function GET() {
       orderBy: { nama: 'asc' },
     });
 
-    return NextResponse.json(anggota);
+    return NextResponse.json(anggota, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      },
+    });
   } catch (error) {
     console.error('[GET /api/anggota]', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

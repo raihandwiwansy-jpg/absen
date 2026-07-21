@@ -62,7 +62,7 @@ export default function AbsensiPage() {
       }
       // Jika tabMode === 'semua', tidak kirim param tanggal/bulan/tahun
 
-      const res = await fetch(`/api/absensi?${params}`);
+      const res = await fetch(`/api/absensi?${params}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
       if (res.ok) setAbsensi(await res.json());
     } finally {
       if (!silent) setLoading(false);

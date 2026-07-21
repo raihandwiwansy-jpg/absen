@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getSessionAdmin } from '@/lib/auth';
 import { getDailyCode } from '@/lib/daily-code';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const session = await getSessionAdmin();
   if (!session) {
@@ -9,5 +11,5 @@ export async function GET() {
   }
 
   const code = getDailyCode();
-  return NextResponse.json({ code });
+  return NextResponse.json({ code }, { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } });
 }
