@@ -6,6 +6,8 @@ import { getJakartaDayBounds, getTodayJakartaBounds } from '@/lib/date-utils';
 
 export const dynamic = 'force-dynamic';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/absensi - list absensi dengan filter opsional
 export async function GET(request: NextRequest) {
   const session = await getSessionAdmin();

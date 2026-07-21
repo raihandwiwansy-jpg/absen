@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "db:push": "prisma db push",
-    "db:seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts",
+    "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
     "setup": "npm run db:push && npm run db:seed && node scripts/download-models.js",
     "postinstall": "prisma generate"
   },
