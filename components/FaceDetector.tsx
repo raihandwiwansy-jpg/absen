@@ -34,8 +34,8 @@ interface FaceDetectorProps {
 
 // Minimum frames wajah harus stabil sebelum matching dijalankan
 const STABILITY_FRAMES = 2;
-// Threshold similarity
-const SIMILARITY_THRESHOLD = 0.60;
+// Threshold similarity untuk neural net descriptor (@vladmandic/human faceres)
+const SIMILARITY_THRESHOLD = 0.86;
 
 export default function FaceDetector({
   videoRef,
@@ -103,12 +103,14 @@ export default function FaceDetector({
 
   // Cosine similarity inline
   function cosineSim(a: number[], b: number[]): number {
-    if (a.length !== b.length) return 0;
+    if (!a || !b || !Array.isArray(a) || !Array.isArray(b) || a.length !== b.length || a.length === 0) return 0;
     let dot = 0, na = 0, nb = 0;
     for (let i = 0; i < a.length; i++) {
-      dot += a[i] * b[i];
-      na += a[i] * a[i];
-      nb += b[i] * b[i];
+      const va = Number(a[i]) || 0;
+      const vb = Number(b[i]) || 0;
+      dot += va * vb;
+      na += va * va;
+      nb += vb * vb;
     }
     if (na === 0 || nb === 0) return 0;
     return dot / (Math.sqrt(na) * Math.sqrt(nb));

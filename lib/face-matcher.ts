@@ -5,23 +5,28 @@
 
 // Threshold similarity untuk match (0.0 - 1.0)
 // Semakin tinggi = lebih ketat, semakin rendah = lebih longgar
-export const SIMILARITY_THRESHOLD = 0.60;
+// Threshold similarity untuk match (0.0 - 1.0)
+// Untuk neural net descriptor (@vladmandic/human faceres 1024 vector),
+// dua wajah berbeda memiliki cosine similarity ~0.65-0.82, sedangkan wajah yang sama >= 0.86.
+export const SIMILARITY_THRESHOLD = 0.86;
 
 /**
  * Hitung cosine similarity antara dua descriptor vector.
  * Return nilai 0.0 - 1.0 (semakin mendekati 1.0 = semakin mirip)
  */
 export function cosineSimilarity(a: number[], b: number[]): number {
-  if (a.length !== b.length) return 0;
+  if (!a || !b || !Array.isArray(a) || !Array.isArray(b) || a.length !== b.length || a.length === 0) return 0;
   
   let dot = 0;
   let normA = 0;
   let normB = 0;
   
   for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
+    const valA = Number(a[i]) || 0;
+    const valB = Number(b[i]) || 0;
+    dot += valA * valB;
+    normA += valA * valA;
+    normB += valB * valB;
   }
   
   if (normA === 0 || normB === 0) return 0;
@@ -32,17 +37,22 @@ export function cosineSimilarity(a: number[], b: number[]): number {
  * Hitung rata-rata dari beberapa descriptor (hasil dari beberapa sample wajah).
  */
 export function averageDescriptors(descriptors: number[][]): number[] {
-  if (descriptors.length === 0) return [];
-  const len = descriptors[0].length;
+  if (!descriptors || !Array.isArray(descriptors) || descriptors.length === 0) return [];
+  const validDescs = descriptors.filter((d) => Array.isArray(d) && d.length > 0);
+  if (validDescs.length === 0) return [];
+  
+  const len = validDescs[0].length;
   const avg = new Array(len).fill(0);
   
-  for (const desc of descriptors) {
-    for (let i = 0; i < len; i++) {
-      avg[i] += desc[i];
+  for (const desc of validDescs) {
+    if (desc.length === len) {
+      for (let i = 0; i < len; i++) {
+        avg[i] += Number(desc[i]) || 0;
+      }
     }
   }
   
-  return avg.map((v) => v / descriptors.length);
+  return avg.map((v) => v / validDescs.length);
 }
 
 export interface AnggotaEmbedding {

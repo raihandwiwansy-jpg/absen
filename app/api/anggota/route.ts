@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSessionAdmin } from '@/lib/auth';
-import { cosineSimilarity, SIMILARITY_THRESHOLD } from '@/lib/face-matcher';
+import { cosineSimilarity, SIMILARITY_THRESHOLD, averageDescriptors } from '@/lib/face-matcher';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,21 +53,32 @@ export async function POST(request: NextRequest) {
       select: { id: true, nama: true, embeddings: true },
     });
 
+    const avgNew = averageDescriptors(embeddings);
+
     for (const member of existingMembers) {
       try {
         const storedDescriptors: number[][] = JSON.parse(member.embeddings);
+        if (!Array.isArray(storedDescriptors) || storedDescriptors.length === 0) continue;
+
+        const avgStored = averageDescriptors(storedDescriptors);
+        const avgSim = cosineSimilarity(avgNew, avgStored);
+
+        let maxPairwiseSim = 0;
         for (const newDesc of embeddings) {
           for (const storedDesc of storedDescriptors) {
             const sim = cosineSimilarity(newDesc, storedDesc);
-            if (sim >= SIMILARITY_THRESHOLD) {
-              return NextResponse.json(
-                {
-                  error: `Wajah ini sudah terdaftar atas nama "${member.nama}". Satu wajah hanya boleh didaftarkan 1 kali dalam sistem.`,
-                },
-                { status: 400 }
-              );
-            }
+            if (sim > maxPairwiseSim) maxPairwiseSim = sim;
           }
+        }
+
+        // Cek jika rata-rata similarity melampaui threshold ATAU ada pasangan identik >= 0.90
+        if (avgSim >= SIMILARITY_THRESHOLD || maxPairwiseSim >= 0.90) {
+          return NextResponse.json(
+            {
+              error: `Wajah ini sudah terdaftar atas nama "${member.nama}". Satu wajah hanya boleh didaftarkan 1 kali dalam sistem.`,
+            },
+            { status: 400 }
+          );
         }
       } catch {
         // Abaikan jika data JSON rusak
